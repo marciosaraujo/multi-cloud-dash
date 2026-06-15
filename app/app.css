@@ -4,13 +4,35 @@
 	--font-sans:
 		"Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
 		"Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+	--font-mono:
+		"JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+html {
+	color-scheme: dark;
 }
 
 html,
 body {
-	@apply bg-white dark:bg-gray-950;
-
-	@media (prefers-color-scheme: dark) {
-		color-scheme: dark;
-	}
+	@apply text-slate-50;
+	min-height: 100%;
+	background-color: #020617;
+	/* Liquid-glass ambient: layered radial glows over a deep slate base. */
+	background-image:
+		radial-gradient(
+			55rem 55rem at 15% -10%,
+			rgba(56, 189, 248, 0.16),
+			transparent 60%
+		),
+		radial-gradient(
+			50rem 50rem at 95% 0%,
+			rgba(59, 130, 246, 0.14),
+			transparent 55%
+		),
+		radial-gradient(
+			60rem 60rem at 50% 120%,
+			rgba(99, 102, 241, 0.12),
+			transparent 60%
+		);
+	background-attachment: fixed;
 }

@@ -201,3 +201,7 @@ dist
 ### React Router ###
 .react-router/
 /build/
+
+### Claude Code ###
+CLAUDE.md
+.claude/
