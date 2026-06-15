@@ -1,5 +1,7 @@
 # Multi-Cloud Health Dashboard
 
+**Live:** [multi-cloud-dash.marciosaraujo.workers.dev](https://multi-cloud-dash.marciosaraujo.workers.dev)
+
 An edge-native infrastructure health dashboard that aggregates the public status
 of critical cloud and SaaS providers into a single, fast, liquid-glass view.
 Built with **React Router 7** (SSR), **TypeScript**, **Tailwind CSS 4**, and
@@ -147,13 +149,6 @@ npx wrangler versions deploy
   24h/7d/30d range selector.
 - Alerts / webhooks on status transitions (Slack, Teams, email).
 - User-defined custom endpoints.
-
-## Author
-
-**Márcio Araújo** — DevOps / SRE
-
-- GitHub: [github.com/marciosaraujo](https://github.com/marciosaraujo)
-- Email: [marcio@marcioaraujo.net](mailto:marcio@marcioaraujo.net)
 
 ## License
 
