@@ -17,9 +17,14 @@ per-provider and per-service detail — rendered at the edge, close to the user.
 - **Per-provider pages** (`/providers/:providerId`) — every monitored service for
   a provider with its current status.
 - **Per-service detail** (`/services/:serviceId`) — latency, HTTP status,
-  statuspage indicator, message, and the underlying endpoint.
+  statuspage indicator, message, the underlying endpoint, plus a **30-day uptime
+  bar**, **latency sparkline**, real uptime %, and a "degraded since" badge.
+- **History & persistence** — a cron trigger records every check into Cloudflare
+  KV (live snapshot + 31 days of daily aggregates), so uptime is measured over
+  time rather than invented. See below.
 - **Server-side rendering** on Cloudflare Workers with short edge caching, so the
   status you see reflects the current state rather than a stale snapshot.
+- **JSON API** — `/api/state` and `/api/history` expose the raw KV data.
 - **Liquid-glass UI** — dark glassmorphism theme built with Tailwind CSS 4.
 
 ## Monitored providers
@@ -33,12 +38,18 @@ Two kinds of checks feed a normalized status model:
 - **`http`** — measures HTTP status code and latency for providers without an
   open, unauthenticated status API (Azure, Azure DevOps, AWS).
 
-Checks run in parallel with a 5s timeout, so one slow provider never blocks the
-page. Results are cached ~60s in the Cloudflare Cache API.
+Checks run with a 5s timeout and at most 6 concurrent outbound connections (the
+Workers free-tier limit), so one slow provider never blocks the page. Results
+are cached ~60s in the Cloudflare Cache API.
+
+**Status model is deliberately conservative:** a timeout, DNS error, rate limit
+(`429`) or `5xx` maps to `unknown` — a loss of visibility — **never `down`**.
+Only a provider's own status API declaring `critical` yields `down`. Uptime is
+**strict**: only fully operational counts as available.
 
 > **Known limitation:** `http` checks measure the availability of a provider's
 > public status page, not the real health of that cloud. Some pages block
-> non-browser clients and may therefore report degraded/down. Authenticated
+> non-browser clients and may therefore report degraded/unknown. Authenticated
 > health APIs (Azure Resource Health, AWS Health, etc.) are future work.
 
 ## Architecture
@@ -46,14 +57,38 @@ page. Results are cached ~60s in the Cloudflare Cache API.
 - **`app/lib/services.ts`** — static config: the `SERVICES` to monitor, the
   `PROVIDERS` list, and the `ServiceDefinition` / `ServiceHealth` types.
 - **`app/lib/health-check.ts`** — `checkService` / `checkAll` run the fetches
-  (timeout, custom `User-Agent`, `Promise.allSettled`) and normalize results;
+  (5s timeout, custom `User-Agent`, 6-way concurrency cap) and normalize results;
   edge cache lives here.
+- **`app/lib/history.ts`** — Workers KV persistence: `recordChecks` folds a round
+  of checks into the live snapshot and flushes daily aggregates; `readState` /
+  `readHistory` feed the loaders.
 - **`app/lib/metrics.ts`** — derives provider rollups and overview KPIs from
   `ServiceHealth[]`.
 - **`app/routes/`** — route modules whose server-side loaders call the
-  health-check functions. Routes are registered in `app/routes.ts`.
-- **`workers/app.ts`** — Cloudflare Worker entry that hands requests to React
-  Router's request handler.
+  health-check and history functions. Routes are registered in `app/routes.ts`.
+- **`workers/app.ts`** — Cloudflare Worker entry: hands requests to React
+  Router's request handler, and runs `scheduled()` on the cron trigger.
+
+### History & persistence
+
+A cron trigger (`*/5 * * * *`, UTC) runs the same checks every 5 minutes and
+writes to a single KV namespace (`HEALTH_KV`), two keys only:
+
+- **`state:current`** — live snapshot, overwritten each cycle (~288 writes/day):
+  status, latency ring (for the sparkline), `degradedSince`, and the running
+  daily tally.
+- **`history:daily`** — rolling **31-day** aggregates per service (uptime %,
+  worst status, avg/p95 latency), written **once per UTC-day rollover** so the
+  whole thing stays at ~289 writes/day — well under the free-tier 1,000/day cap.
+
+Days with no data render grey, not green — real systems have blind spots. The
+namespace is created once, by hand (control-plane, not idempotent):
+
+```bash
+npx wrangler kv namespace create HEALTH_KV --update-config
+npx wrangler kv namespace create HEALTH_KV --preview --update-config
+npm run cf-typegen   # types env.HEALTH_KV
+```
 
 ## Tech stack
 
@@ -128,7 +163,8 @@ npm run cf-typegen  # regenerate binding types after editing wrangler.json
 
 ## Deployment
 
-Deploys to Cloudflare Workers via Wrangler:
+The repo is connected to Cloudflare's Git integration, so a push to `main`
+deploys automatically (cron trigger included). To deploy by hand instead:
 
 ```bash
 npm run build
@@ -145,8 +181,8 @@ npx wrangler versions deploy
 ## Roadmap
 
 - Protected `/sre/internal` route with raw responses, logs, and internal checks.
-- Historical storage (Cloudflare KV / D1) for real uptime over time and a
-  24h/7d/30d range selector.
+- A 24h / 7d / 30d / 90d range selector over the stored history.
+- Public incident timeline from the providers' Atlassian status feeds.
 - Alerts / webhooks on status transitions (Slack, Teams, email).
 - User-defined custom endpoints.
 
