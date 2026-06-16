@@ -1,8 +1,16 @@
 import { Link } from "react-router";
+import type { DailyAgg } from "~/lib/history";
 import type { ServiceHealth } from "~/lib/services";
 import { StatusBadge } from "./StatusBadge";
+import { UptimeBar } from "./UptimeBar";
 
-export function ServiceCard({ health }: { health: ServiceHealth }) {
+export function ServiceCard({
+	health,
+	days = [],
+}: {
+	health: ServiceHealth;
+	days?: DailyAgg[];
+}) {
 	return (
 		<Link
 			to={`/services/${health.serviceId}`}
@@ -20,6 +28,11 @@ export function ServiceCard({ health }: { health: ServiceHealth }) {
 			</div>
 			{health.message ? (
 				<p className="mt-2 truncate text-xs text-slate-400">{health.message}</p>
+			) : null}
+			{days.length ? (
+				<div className="mt-3">
+					<UptimeBar days={days} range={14} />
+				</div>
 			) : null}
 		</Link>
 	);

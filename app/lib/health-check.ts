@@ -32,8 +32,11 @@ function indicatorToStatus(indicator: string | undefined): ServiceStatus {
 
 function httpCodeToStatus(code: number): ServiceStatus {
 	if (code >= 200 && code < 400) return "up";
-	if (code >= 400 && code < 500) return "degraded";
-	return "down";
+	// 429 (rate limit) and 5xx are loss-of-visibility, not provider downtime —
+	// they map to UNKNOWN, never DOWN (spec §6). Other 4xx is degraded.
+	if (code === 429 || code >= 500) return "unknown";
+	if (code >= 400) return "degraded";
+	return "unknown";
 }
 
 async function runCheck(def: ServiceDefinition): Promise<ServiceHealth> {
@@ -97,7 +100,10 @@ async function runCheck(def: ServiceDefinition): Promise<ServiceHealth> {
 				: err instanceof Error
 					? err.message
 					: "Unknown error";
-		return { ...base, status: "down", latencyMs, message };
+		// Timeout / DNS / connection errors are loss-of-visibility, not confirmed
+		// downtime — UNKNOWN, never DOWN (spec §6). Only a provider's own status
+		// API reporting "critical" yields DOWN.
+		return { ...base, status: "unknown", latencyMs: null, message };
 	}
 }
 
@@ -148,10 +154,39 @@ export async function checkService(
 	return health;
 }
 
+// Workers free tier allows only 6 simultaneous outbound connections per
+// invocation (spec §7), so cap concurrency rather than fan out all at once.
+const MAX_CONCURRENCY = 6;
+
+async function mapLimit<T, R>(
+	items: T[],
+	limit: number,
+	fn: (item: T) => Promise<R>,
+): Promise<PromiseSettledResult<R>[]> {
+	const out: PromiseSettledResult<R>[] = new Array(items.length);
+	let next = 0;
+	async function worker() {
+		while (next < items.length) {
+			const i = next++;
+			try {
+				out[i] = { status: "fulfilled", value: await fn(items[i]) };
+			} catch (reason) {
+				out[i] = { status: "rejected", reason };
+			}
+		}
+	}
+	await Promise.all(
+		Array.from({ length: Math.min(limit, items.length) }, worker),
+	);
+	return out;
+}
+
 export async function checkAll(
 	defs: ServiceDefinition[],
 ): Promise<ServiceHealth[]> {
-	const results = await Promise.allSettled(defs.map((d) => checkService(d)));
+	const results = await mapLimit(defs, MAX_CONCURRENCY, (d) =>
+		checkService(d),
+	);
 	return results.map((r, i) =>
 		r.status === "fulfilled"
 			? r.value
@@ -159,7 +194,7 @@ export async function checkAll(
 					serviceId: defs[i].id,
 					name: defs[i].name,
 					provider: defs[i].provider,
-					status: "down" as const,
+					status: "unknown" as const,
 					latencyMs: null,
 					checkedAt: new Date().toISOString(),
 					message: "Check failed unexpectedly",

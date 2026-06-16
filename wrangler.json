@@ -3,12 +3,26 @@
 	"name": "multi-cloud-dash",
 	"main": "./workers/app.ts",
 	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"observability": {
 		"enabled": true
+	},
+	"triggers": {
+		"crons": [
+			"*/5 * * * *"
+		]
 	},
 	"upload_source_maps": true,
 	"vars": {
 		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-	}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "HEALTH_KV",
+			"id": "e74ada74dedc49b7ad12ee6b0eb51aea",
+			"preview_id": "dfd9cb8aa1e7417698bf2a3405304e20"
+		}
+	]
 }

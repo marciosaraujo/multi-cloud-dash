@@ -65,6 +65,22 @@ export default function About() {
 					</p>
 				</Panel>
 
+				<Panel title="History & persistence">
+					<p>
+						A cron trigger runs the same checks every 5 minutes (UTC) and folds
+						the result into Workers KV: one live snapshot plus daily aggregates
+						kept for 31 days. The 30-day bar and latency sparkline read from
+						that store — no external database, all on the free tier.
+					</p>
+					<p>
+						Uptime is <span className="text-slate-200">strict</span>: only fully
+						operational counts as available. Timeouts, rate limits (429) and 5xx
+						map to <span className="text-slate-200">UNKNOWN</span> — a loss of
+						visibility, never DOWN. Only a provider's own status API declaring
+						"critical" yields DOWN, and days with no data render grey, not green.
+					</p>
+				</Panel>
+
 				<Panel title="How the checks work">
 					<p>
 						Two kinds of checks feed a normalized status model:

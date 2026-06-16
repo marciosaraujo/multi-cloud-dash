@@ -1,4 +1,7 @@
 import { createRequestHandler } from "react-router";
+import { checkAll } from "~/lib/health-check";
+import { recordChecks } from "~/lib/history";
+import { SERVICES } from "~/lib/services";
 
 declare module "react-router" {
 	export interface AppLoadContext {
@@ -19,5 +22,10 @@ export default {
 		return requestHandler(request, {
 			cloudflare: { env, ctx },
 		});
+	},
+	// Cron (*/5 UTC): run the existing checks and fold them into KV state.
+	async scheduled(_event, env, _ctx) {
+		const results = await checkAll(SERVICES);
+		await recordChecks(env, results);
 	},
 } satisfies ExportedHandler<Env>;
