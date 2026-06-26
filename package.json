@@ -44,12 +44,13 @@
 	"scripts": {
 		"build": "react-router build",
 		"cf-typegen": "wrangler types && react-router typegen",
-		"check": "tsc && react-router build && wrangler deploy --dry-run",
+		"check": "npm run test && tsc && react-router build && wrangler deploy --dry-run",
 		"deploy": "wrangler deploy",
 		"dev": "react-router dev",
 		"format": "prettier --write .",
 		"lint": "eslint .",
 		"preview": "npm run build && vite preview",
+		"test": "node --test \"app/**/*.test.ts\"",
 		"typecheck": "npm run cf-typegen && tsc -b"
 	},
 	"type": "module"
