@@ -4,7 +4,12 @@ export type ProviderId =
 	| "azure-devops"
 	| "github"
 	| "aws"
-	| "oracle";
+	| "oracle"
+	| "openai"
+	| "anthropic"
+	| "npm"
+	| "discord"
+	| "atlassian";
 
 export type ServiceType = "status-api" | "http";
 
@@ -43,6 +48,11 @@ export const PROVIDERS: ProviderMeta[] = [
 	{ id: "github", name: "GitHub" },
 	{ id: "aws", name: "AWS" },
 	{ id: "oracle", name: "Oracle Cloud" },
+	{ id: "openai", name: "OpenAI" },
+	{ id: "anthropic", name: "Anthropic" },
+	{ id: "npm", name: "npm" },
+	{ id: "discord", name: "Discord" },
+	{ id: "atlassian", name: "Atlassian" },
 ];
 
 export const SERVICES: ServiceDefinition[] = [
@@ -128,6 +138,56 @@ export const SERVICES: ServiceDefinition[] = [
 		type: "http",
 		url: "https://ocistatus.oraclecloud.com/",
 		description: "HTTP check for Oracle Cloud status page",
+	},
+
+	// OpenAI
+	{
+		id: "openai-status",
+		name: "OpenAI Status",
+		provider: "openai",
+		type: "status-api",
+		url: "https://status.openai.com/api/v2/status.json",
+		description: "OpenAI global incident indicator",
+	},
+
+	// Anthropic
+	{
+		id: "anthropic-status",
+		name: "Anthropic Status",
+		provider: "anthropic",
+		type: "status-api",
+		url: "https://status.anthropic.com/api/v2/status.json",
+		description: "Anthropic (Claude) global incident indicator",
+	},
+
+	// npm
+	{
+		id: "npm-status",
+		name: "npm Status",
+		provider: "npm",
+		type: "status-api",
+		url: "https://status.npmjs.org/api/v2/status.json",
+		description: "npm registry global incident indicator",
+	},
+
+	// Discord
+	{
+		id: "discord-status",
+		name: "Discord Status",
+		provider: "discord",
+		type: "status-api",
+		url: "https://discordstatus.com/api/v2/status.json",
+		description: "Discord global incident indicator",
+	},
+
+	// Atlassian
+	{
+		id: "atlassian-status",
+		name: "Atlassian Status",
+		provider: "atlassian",
+		type: "status-api",
+		url: "https://status.atlassian.com/api/v2/status.json",
+		description: "Atlassian global incident indicator",
 	},
 ];
 
