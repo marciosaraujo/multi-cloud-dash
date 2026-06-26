@@ -195,9 +195,7 @@ export function getService(id: string): ServiceDefinition | undefined {
 	return SERVICES.find((s) => s.id === id);
 }
 
-export function getServicesByProvider(
-	provider: string,
-): ServiceDefinition[] {
+export function getServicesByProvider(provider: string): ServiceDefinition[] {
 	return SERVICES.filter((s) => s.provider === provider);
 }
 
