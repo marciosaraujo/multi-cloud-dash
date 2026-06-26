@@ -129,3 +129,21 @@ test("windowUptimePct weights by checks", () => {
 	assert.equal(pct, 75);
 	assert.equal(windowUptimePct([]), null);
 });
+
+test("degradedSince stays null on unknown (loss of visibility, not incident)", async () => {
+	const kv = fakeKV();
+	const env = envWith(kv);
+	await recordChecks(env, [check("up", 10)]);
+	await recordChecks(env, [check("unknown", null)]);
+	let state = await readState(env);
+	assert.equal(state!.services.svc.degradedSince, null); // blind spot, não incidente
+
+	// Mas uma degradação confirmada carimba, e um unknown subsequente preserva.
+	await recordChecks(env, [check("degraded", 20)]);
+	state = await readState(env);
+	const since = state!.services.svc.degradedSince;
+	assert.ok(since);
+	await recordChecks(env, [check("unknown", null)]);
+	state = await readState(env);
+	assert.equal(state!.services.svc.degradedSince, since); // preservado
+});

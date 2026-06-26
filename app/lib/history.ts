@@ -153,7 +153,11 @@ export async function recordChecks(
 	for (const r of results) {
 		const s = state.services[r.serviceId] ?? initService(todayUTC);
 
-		if (r.status !== "up" && s.status === "up") {
+		// degradedSince marca o início de uma degradação CONFIRMADA (degraded/down).
+		// `unknown` é perda de visibilidade, não incidente: não inicia nem encerra o
+		// relógio. Só `up` o zera. (README §status model)
+		const incident = r.status === "degraded" || r.status === "down";
+		if (incident && s.degradedSince === null) {
 			s.degradedSince = now.toISOString();
 		}
 		if (r.status === "up") s.degradedSince = null;
