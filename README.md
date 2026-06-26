@@ -29,12 +29,12 @@ per-provider and per-service detail — rendered at the edge, close to the user.
 
 ## Monitored providers
 
-Cloudflare · Azure · Azure DevOps · GitHub · AWS · Oracle Cloud.
+Cloudflare · Azure · Azure DevOps · GitHub · AWS · Oracle Cloud · OpenAI · Anthropic · npm · Discord · Atlassian.
 
 Two kinds of checks feed a normalized status model:
 
 - **`status-api`** — parses the [statuspage.io](https://www.atlassian.com/software/statuspage)
-  v2 indicator (Cloudflare, GitHub, Oracle) into `up` / `degraded` / `down`.
+  v2 indicator (Cloudflare, GitHub, Oracle, OpenAI, Anthropic, npm, Discord, Atlassian) into `up` / `degraded` / `down`.
 - **`http`** — measures HTTP status code and latency for providers without an
   open, unauthenticated status API (Azure, Azure DevOps, AWS).
 

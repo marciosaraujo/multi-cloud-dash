@@ -77,19 +77,19 @@ export default function About() {
 						operational counts as available. Timeouts, rate limits (429) and 5xx
 						map to <span className="text-slate-200">UNKNOWN</span> — a loss of
 						visibility, never DOWN. Only a provider's own status API declaring
-						"critical" yields DOWN, and days with no data render grey, not green.
+						"critical" yields DOWN, and days with no data render grey, not
+						green.
 					</p>
 				</Panel>
 
 				<Panel title="How the checks work">
-					<p>
-						Two kinds of checks feed a normalized status model:
-					</p>
+					<p>Two kinds of checks feed a normalized status model:</p>
 					<ul className="list-disc space-y-1 pl-5">
 						<li>
 							<span className="text-slate-200">status-api</span> — parses the
-							statuspage.io indicator (Cloudflare, GitHub, Oracle) into
-							operational / degraded / down.
+							statuspage.io indicator (Cloudflare, GitHub, Oracle, OpenAI,
+							Anthropic, npm, Discord, Atlassian) into operational / degraded /
+							down.
 						</li>
 						<li>
 							<span className="text-slate-200">http</span> — measures HTTP
@@ -109,16 +109,18 @@ export default function About() {
 							server-side data loaders.
 						</li>
 						<li>
-							<span className="text-slate-200">Cloudflare Workers</span> —
-							edge runtime; checks and rendering run close to the user.
+							<span className="text-slate-200">Cloudflare Workers</span> — edge
+							runtime; checks and rendering run close to the user.
 						</li>
 						<li>
-							<span className="text-slate-200">TypeScript + Tailwind CSS 4</span>{" "}
+							<span className="text-slate-200">
+								TypeScript + Tailwind CSS 4
+							</span>{" "}
 							— typed end to end, liquid-glass UI.
 						</li>
 						<li>
-							<span className="text-slate-200">Vite + Wrangler</span> — build and
-							deploy toolchain.
+							<span className="text-slate-200">Vite + Wrangler</span> — build
+							and deploy toolchain.
 						</li>
 					</ul>
 				</Panel>
